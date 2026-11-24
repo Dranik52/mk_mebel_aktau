@@ -42,6 +42,8 @@ function showFieldError(id, message) {
   const error = document.getElementById(id + '-error');
   if (!input || !error) return;
   input.classList.toggle('invalid', Boolean(message));
+  input.setAttribute('aria-invalid', String(Boolean(message)));
+  input.setAttribute('aria-describedby', id + '-error');
   error.textContent = message || '';
   error.classList.toggle('show', Boolean(message));
 }
@@ -69,6 +71,7 @@ function applyLang(lang) {
   });
   langBtns.forEach(function(b) {
     b.classList.toggle('active', b.dataset.lang === lang);
+    b.setAttribute('aria-pressed', String(b.dataset.lang === lang));
   });
 }
 langBtns.forEach(function(b) {
@@ -394,12 +397,17 @@ document.querySelectorAll('.p-tile').forEach(function(tile) {
 document.querySelectorAll('.faq-item').forEach(function(item) {
   const q = item.querySelector('.faq-q');
   if (!q) return;
+  q.setAttribute('aria-expanded', 'false');
   q.addEventListener('click', function() {
     const wasOpen = item.classList.contains('open');
     document.querySelectorAll('.faq-item.open').forEach(function(openItem) {
-      if (openItem !== item) openItem.classList.remove('open');
+      if (openItem !== item) {
+        openItem.classList.remove('open');
+        openItem.querySelector('.faq-q').setAttribute('aria-expanded', 'false');
+      }
     });
     item.classList.toggle('open', !wasOpen);
+    q.setAttribute('aria-expanded', String(!wasOpen));
   });
 });
 
@@ -490,12 +498,25 @@ const closeBtn = document.getElementById('mobileClose');
 function openMenu() {
   mobileMenu.classList.add('open');
   document.body.classList.add('menu-open');
+  mobileMenu.inert = false;
+  burgerBtn.setAttribute('aria-expanded', 'true');
+  closeBtn.focus();
 }
 
 function closeMenu() {
   mobileMenu.classList.remove('open');
   document.body.classList.remove('menu-open');
+  mobileMenu.inert = true;
+  burgerBtn.setAttribute('aria-expanded', 'false');
 }
+mobileMenu.inert = true;
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape' && mobileMenu.classList.contains('open')) {
+    closeMenu();
+    burgerBtn.focus();
+  }
+});
+langBtns.forEach(function(b) { b.setAttribute('aria-pressed', String(b.dataset.lang === currentLang)); });
 burgerBtn.addEventListener('click', openMenu);
 closeBtn.addEventListener('click', closeMenu);
 mobileMenu.querySelectorAll('a').forEach(function(a) {
