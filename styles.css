@@ -2055,3 +2055,92 @@ footer .brand-name b,footer .footer-col a:hover{color:#fff}
 .brand-sub{font-size:11px;letter-spacing:.12em;color:#6f6558}
 footer .brand-name{color:#f3ede0}footer .brand-name b{color:#b08a4e}footer .brand-sub{color:#cfc6b8}
 @media(max-width:480px){.brand-mark{width:38px;height:38px;flex-basis:38px;font-size:14px}}
+
+/* Mobile usability: touch targets, readable controls and safe screen edges. */
+.mobile-menu {
+  visibility: hidden;
+  transition: transform .35s ease, visibility .35s;
+  overscroll-behavior-y: contain;
+  padding-top: max(20px, env(safe-area-inset-top));
+  padding-right: max(20px, env(safe-area-inset-right));
+  padding-bottom: max(24px, env(safe-area-inset-bottom));
+  padding-left: max(20px, env(safe-area-inset-left));
+}
+.mobile-menu.open { visibility: visible; }
+.mobile-menu-top { flex-shrink: 0; margin-bottom: 20px; }
+.mobile-close { flex-shrink: 0; min-width: 44px; min-height: 44px; }
+.mobile-links a { min-height: 48px; padding-block: 10px; }
+body.menu-open { position: fixed; width: 100%; }
+.lang-switch button { min-width: 44px; min-height: 44px; }
+.calc-field input, .calc-field select { font-size: 16px; min-height: 48px; }
+#kitchenCalculator { scroll-margin-top: 12px; }
+.calc-shape, .calc-material, .calc-result-grid > *, .calc-row > * { min-width: 0; }
+.calc-row { flex-wrap: wrap; gap: 4px 16px; }
+.calc-row b { margin-left: auto; }
+
+@media (max-width: 800px) {
+  html { scroll-padding-top: calc(92px + env(safe-area-inset-top)); }
+  header { padding-top: env(safe-area-inset-top); }
+  .wrap {
+    padding-left: max(24px, env(safe-area-inset-left));
+    padding-right: max(24px, env(safe-area-inset-right));
+  }
+  footer { padding-bottom: max(30px, env(safe-area-inset-bottom)); }
+}
+
+@media (max-width: 520px) {
+  .wrap {
+    padding-left: max(20px, env(safe-area-inset-left));
+    padding-right: max(20px, env(safe-area-inset-right));
+  }
+  .nav { gap: 6px; }
+  .nav .brand { gap: 8px; }
+  .nav-right { gap: 4px; }
+  .nav .lang-switch button { padding-inline: 6px; }
+  .hero .wrap { padding: 0; }
+  .hero .wrap > div:first-child {
+    padding-left: max(20px, env(safe-area-inset-left));
+    padding-right: max(20px, env(safe-area-inset-right));
+  }
+  .hero h1 { font-size: clamp(36px, 10vw, 44px); }
+  .hero-cta { flex-direction: column; }
+  .hero-cta .btn { width: 100%; }
+  .trust-item span { font-size: 12px; line-height: 1.45; }
+  .hero-art-caption { font-size: 13px; }
+  .hero-art {
+    height: clamp(300px, 90vw, 380px);
+    min-height: 0;
+    max-height: 60svh;
+  }
+  .hero-photo { object-position: center 55%; }
+  .section-head.center { margin-bottom: 28px; }
+  .portfolio-grid { grid-template-columns: 1fr; gap: 20px; }
+  .p-tile, .p-tile:first-child { grid-column: auto; aspect-ratio: 4/5; min-height: 0; }
+  .p-tile span { font-size: 21px; }
+  .p-arrow.prev { left: 12px; }
+  .p-arrow.next { right: 12px; }
+  .calc-nav { flex-direction: column; gap: 10px; }
+  .calc-nav .btn { width: 100%; min-width: 0; }
+  .calc-shape { padding-inline: 8px; }
+  .calc-shape.selected { padding-inline: 7px; }
+  .calc-shape-name { overflow-wrap: anywhere; }
+  .calc-total { padding: 24px 16px; }
+  .calc-total-value { font-size: clamp(28px, 8.8vw, 44px); overflow-wrap: anywhere; }
+  .calc-bar-row { grid-template-columns: 64px minmax(0, 1fr) 80px; gap: 6px; }
+  .calc-step-sub, .calc-hint { font-size: 15px; }
+  .form-note, .field-error, .calc-error { font-size: 14px; }
+  .footer-col a { display: inline-flex; align-items: center; min-height: 44px; }
+  .footer-col ul { gap: 0; }
+}
+
+@media (max-width: 360px) {
+  .nav.wrap { padding-inline: 12px; }
+  .nav .brand { gap: 6px; }
+  .calc-shapes { grid-template-columns: 1fr; }
+  .rev-card { grid-template-columns: 1fr; gap: 16px; }
+  .rev-photo { aspect-ratio: 4/3; }
+}
+
+@media (hover: none) {
+  .calc-shape:hover, .calc-material:hover { transform: none; }
+}

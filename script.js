@@ -61,6 +61,9 @@ function applyLang(lang) {
   if (lang !== 'ru' && lang !== 'kz') return;
   currentLang = lang;
   document.documentElement.lang = lang === 'ru' ? 'ru' : 'kk';
+  document.querySelector('.burger').setAttribute('aria-label', lang === 'ru' ? 'Открыть меню' : 'Мәзірді ашу');
+  document.getElementById('mobileClose').setAttribute('aria-label', lang === 'ru' ? 'Закрыть меню' : 'Мәзірді жабу');
+  document.getElementById('mobileMenu').setAttribute('aria-label', lang === 'ru' ? 'Меню' : 'Мәзір');
   document.querySelectorAll('.i18n').forEach(function(el) {
     const val = el.dataset[lang];
     if (val !== undefined) el.textContent = val;
@@ -223,10 +226,15 @@ document.querySelectorAll('.p-tile').forEach(function(tile) {
     });
     progress.forEach(function(el) {
       el.classList.toggle('active', Number(el.dataset.calcProgress) <= step);
+      if (Number(el.dataset.calcProgress) === step) el.setAttribute('aria-current', 'step');
+      else el.removeAttribute('aria-current');
     });
     if (step === 2) updateDimensions();
+    const title = calc.querySelector('.calc-step.active .calc-step-title');
+    title.setAttribute('tabindex', '-1');
+    title.focus({ preventScroll: true });
     calc.scrollIntoView({
-      behavior: 'smooth',
+      behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth',
       block: 'start'
     });
   }
@@ -297,8 +305,10 @@ document.querySelectorAll('.p-tile').forEach(function(tile) {
     button.addEventListener('click', function() {
       calc.querySelectorAll('.calc-shape').forEach(function(el) {
         el.classList.remove('selected');
+        el.setAttribute('aria-pressed', 'false');
       });
       button.classList.add('selected');
+      button.setAttribute('aria-pressed', 'true');
       state.shape = button.dataset.shape;
       updateDimensions();
     });
@@ -308,8 +318,10 @@ document.querySelectorAll('.p-tile').forEach(function(tile) {
     button.addEventListener('click', function() {
       calc.querySelectorAll('.calc-material').forEach(function(el) {
         el.classList.remove('selected');
+        el.setAttribute('aria-pressed', 'false');
       });
       button.classList.add('selected');
+      button.setAttribute('aria-pressed', 'true');
       state.material = button.dataset.material;
       state.price = Number(button.dataset.price);
     });
@@ -353,9 +365,11 @@ document.querySelectorAll('.p-tile').forEach(function(tile) {
     state.price = 165000;
     calc.querySelectorAll('.calc-shape').forEach(function(el) {
       el.classList.toggle('selected', el.dataset.shape === state.shape);
+      el.setAttribute('aria-pressed', String(el.dataset.shape === state.shape));
     });
     calc.querySelectorAll('.calc-material').forEach(function(el) {
       el.classList.toggle('selected', el.dataset.material === state.material);
+      el.setAttribute('aria-pressed', String(el.dataset.material === state.material));
     });
     a.value = '3.2';
     b.value = '2.0';
@@ -380,6 +394,10 @@ document.querySelectorAll('.p-tile').forEach(function(tile) {
   });
 
   updateDimensions();
+  calc.querySelectorAll('.calc-shape, .calc-material').forEach(function(button) {
+    button.setAttribute('aria-pressed', String(button.classList.contains('selected')));
+  });
+  progress[0].setAttribute('aria-current', 'step');
 
   // Re-render dynamic calculator labels when the site language changes.
   const originalApplyLang = window.applyLang;
@@ -440,7 +458,6 @@ document.getElementById('leadForm').addEventListener('submit', function(e) {
 
   const now = Date.now();
   if (now - lastSubmitAt < SUBMIT_COOLDOWN_MS) return;
-  lastSubmitAt = now;
 
   const name = sanitizeText(document.getElementById('fname').value, 80);
   const phoneRaw = document.getElementById('fphone').value;
@@ -461,7 +478,11 @@ document.getElementById('leadForm').addEventListener('submit', function(e) {
     showFieldError('fphone', errPhone);
     hasError = true;
   }
-  if (hasError) return;
+  if (hasError) {
+    document.querySelector('#leadForm .invalid').focus();
+    return;
+  }
+  lastSubmitAt = now;
 
   document.getElementById('fname').value = name;
   document.getElementById('fphone').value = phone;
@@ -494,8 +515,20 @@ document.getElementById('fphone').addEventListener('input', function(e) {
 const mobileMenu = document.getElementById('mobileMenu');
 const burgerBtn = document.querySelector('.burger');
 const closeBtn = document.getElementById('mobileClose');
+const menuBackground = Array.from(document.body.children).filter(function(el) {
+  return el !== mobileMenu && el.tagName !== 'SCRIPT';
+});
+const backgroundInertState = new Map();
+let menuScrollY = 0;
 
 function openMenu() {
+  if (mobileMenu.classList.contains('open')) return;
+  menuScrollY = window.scrollY;
+  menuBackground.forEach(function(el) {
+    backgroundInertState.set(el, el.inert);
+    el.inert = true;
+  });
+  document.body.style.top = '-' + menuScrollY + 'px';
   mobileMenu.classList.add('open');
   document.body.classList.add('menu-open');
   mobileMenu.inert = false;
@@ -504,13 +537,31 @@ function openMenu() {
 }
 
 function closeMenu() {
+  if (!mobileMenu.classList.contains('open')) return;
   mobileMenu.classList.remove('open');
   document.body.classList.remove('menu-open');
-  mobileMenu.inert = true;
+  document.body.style.top = '';
+  menuBackground.forEach(function(el) { el.inert = backgroundInertState.get(el); });
+  backgroundInertState.clear();
+  window.scrollTo({ top: menuScrollY, behavior: 'instant' });
   burgerBtn.setAttribute('aria-expanded', 'false');
+  burgerBtn.focus({ preventScroll: true });
+  mobileMenu.inert = true;
 }
 mobileMenu.inert = true;
 document.addEventListener('keydown', function(e) {
+  if (e.key === 'Tab' && mobileMenu.classList.contains('open')) {
+    const controls = mobileMenu.querySelectorAll('a[href], button:not([disabled])');
+    const first = controls[0];
+    const last = controls[controls.length - 1];
+    if (e.shiftKey && document.activeElement === first) {
+      e.preventDefault();
+      last.focus();
+    } else if (!e.shiftKey && document.activeElement === last) {
+      e.preventDefault();
+      first.focus();
+    }
+  }
   if (e.key === 'Escape' && mobileMenu.classList.contains('open')) {
     closeMenu();
     burgerBtn.focus();
@@ -523,7 +574,7 @@ mobileMenu.querySelectorAll('a').forEach(function(a) {
   a.addEventListener('click', closeMenu);
 });
 window.addEventListener('resize', function() {
-  if (window.innerWidth > 900) closeMenu();
+  if (window.innerWidth > 1180) closeMenu();
 });
 
 if (location.hash && !/^#[a-z][\w-]*$/i.test(location.hash)) {
